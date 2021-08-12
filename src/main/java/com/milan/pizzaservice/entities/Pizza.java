@@ -23,4 +23,5 @@ public class Pizza {
     private List<String> toppings;
 
     private int price;
+
 }

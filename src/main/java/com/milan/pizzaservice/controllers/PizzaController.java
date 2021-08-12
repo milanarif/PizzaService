@@ -1,32 +1,77 @@
 package com.milan.pizzaservice.controllers;
 
 import com.milan.pizzaservice.entities.Pizza;
-import com.milan.pizzaservice.repositories.CustomersRepository;
+import org.modelmapper.*;
+import com.milan.pizzaservice.dtos.PizzaDto;
 import com.milan.pizzaservice.repositories.PizzasRepository;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class PizzaController {
 
-    private final PizzasRepository pr;
+    private final PizzasRepository pizzasRepository;
+    private final ModelMapper modelMapper;
 
-    public PizzaController(PizzasRepository pr) {
-        this.pr = pr;
+
+    public PizzaController(PizzasRepository pr, ModelMapper modelMapper) {
+        this.pizzasRepository = pr;
+        this.modelMapper = modelMapper;
     }
 
     @GetMapping("/pizzas")
-    List<Pizza> getAllPizzas() {
-        return pr.findAll();
+    List<PizzaDto> getAllPizzas() {
+    Type listType = new TypeToken<List<PizzaDto>>(){}.getType();
+    return modelMapper.map(pizzasRepository.findAll(), listType);
+    }
+
+    //TODO: SHOULD RETURN NULL OR EMPTY DTO?
+    @GetMapping("pizza/{id}")
+    PizzaDto getPizza(@PathVariable("id") long id) {
+        if (pizzasRepository.existsById(id)) {
+            return modelMapper.map(pizzasRepository.getById(id), PizzaDto.class);
+        }
+        else return null;
     }
 
     @PostMapping("/pizza")
-    Pizza saveAPizza(@RequestBody Pizza pizza) {
-        return pr.save(pizza);
+    PizzaDto saveAPizza(@RequestBody PizzaDto pizza) {
+        Pizza pizzaToSave = modelMapper.map(pizza, Pizza.class);
+        pizzasRepository.save(pizzaToSave);
+        return pizza;
     }
+
+    @DeleteMapping("/pizza/{id}")
+    PizzaDto removePizza(@PathVariable("id") long id) {
+        Optional<Pizza> pizza = pizzasRepository.findById(id);
+        if (pizza.isPresent()) {
+            PizzaDto pizzaDto = modelMapper.map(pizza, PizzaDto.class);
+            pizzasRepository.deleteById(id);
+            return pizzaDto;
+        }
+        else return null;
+    }
+
+   /*
+
+   @PatchMapping("pizza/{id}")
+    PizzaDto patch(@PathVariable("id") Long id) {
+        if (pizzasRepository.existsById(id)) {
+            pizzasRepository.
+        }
+        return modelMapper.map(pizzasRepository.)
+    }
+
+
+
+    @PutMapping
+
+    */
+
+
+
 }
 
